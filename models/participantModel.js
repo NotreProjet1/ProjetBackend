@@ -1,73 +1,60 @@
-const db = require('../config/db');
+// participantModel.js
 const bcrypt = require('bcrypt');
+const util = require('util');
+const dbConnection = require('../config/db');
 
-const saltRounds = 10; // Nombre de rounds de salage pour bcrypt
+const saltRounds = 10;
+const query = util.promisify(dbConnection.query).bind(dbConnection);
 
-const Participant = {
-  register: (participantData, callback) => {
-    const trimmedPassword = participantData.password.trim(); // Trim whitespace
+const participant = {
+  register: async (participantData) => {
+    try {
+      if (!participantData.mots_de_passeP) {
+        throw new Error('Le mot de passe est requis pour l\'inscription.');
+      }
 
-    bcrypt.hash(trimmedPassword, saltRounds, (err, hashedPassword) => {
-      if (err) {
-        return callback(err);
-      }  
-  
-      db.query(
-        'INSERT INTO user (nom, prenom, email, password, categorie, domaine) VALUES (?, ?, ?, ?, ?, ?)',
-        [
-          participantData.nom,
-          participantData.prenom,
-          participantData.email,
-          hashedPassword,
-          participantData.categorie,
-          participantData.domaine,
-        ],
-        (error, result) => {
-          if (error) {
-            return callback(error);
-          }
-          return callback(null, result);
-        }
+      const hashedmots_de_passeP = await bcrypt.hash(participantData.mots_de_passeP, saltRounds);
+      const result = await query(
+        'INSERT INTO participant (avatr,nom, prenom, emailP, mots_de_passeP, categorie, domaine, role) VALUES (?, ?,?, ?, ?, ?, ?, ?)',
+        [participantData.avatr,participantData.nom, participantData.prenom, participantData.emailP, hashedmots_de_passeP, participantData.categorie, participantData.domaine, participantData.role]
       );
-    });
+      return result;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  login: (email, password, callback) => {
-    const trimmedPassword = password.trim(); // Trim whitespace
-  
-    db.query('SELECT * FROM user WHERE email = ?', [email], (error, results) => {
-      if (error) {
-        return callback(error);
-      }
-      if (results.length > 0) {
-        const storedHashedPassword = results[0].password;
-  
-        console.log('Provided Password:', trimmedPassword);
-        console.log('Stored Hashed Password (from DB):', storedHashedPassword);
-  
-        bcrypt.compare(trimmedPassword, storedHashedPassword, (err, passwordMatch) => {
-          if (err) {
-            console.error('bcrypt.compare Error:', err);
-            return callback(err);
-          }
-          console.log('Password Match:', passwordMatch);
-  
-          if (passwordMatch) {
-            // Passwords match, return the user
-            return callback(null, results[0]);
-          } else {
-            // Incorrect password
-            return callback(null, null);
-          }
-        });
-      } else {
-        // User not found
-        return callback(null, null);
-      }
-    });
+  getParticipantByEmail: async (emailP) => {
+    try {
+      const results = await query('SELECT * FROM participant WHERE emailP = ?', [emailP]);
+      console.log('Results:', results);
+      return results.length > 0 ? results[0] : null;
+    } catch (error) {
+      throw error;
+    }
   },
-  
+
+  login: async (emailP, mots_de_passeP) => {
+    try {
+      const participantData = await participant.getParticipantByEmail(emailP);
+
+      if (participantData) {
+        console.log('Mot de passe haché en base de données:', participantData.mots_de_passeP);
+
+        // Utilisez participantData.mots_de_passeP au lieu de results.mots_de_passeP
+        const mots_de_passeMatch = await bcrypt.compare(mots_de_passeP, participantData.mots_de_passeP);
+
+        console.log('Mot de passe fourni pour la comparaison:', mots_de_passeP);
+        console.log('Mot de passe match:', mots_de_passeMatch);
+
+        return mots_de_passeMatch ? participantData : null;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
-module.exports = Participant;
-
+module.exports = participant;
