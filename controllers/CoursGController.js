@@ -1,4 +1,4 @@
-const CoursModel = require('../models/CoursPModel');
+const CoursModel = require('../models/CoursGModel ');
 const db = require('../config/db');
 const { authenticateToken } = require('../middleware/authMiddleware');
 const util = require('util');
@@ -34,7 +34,7 @@ const createCourse = async (req, res) => {
 
 const getAllCourses = async (req, res) => {
   try {
-      const results = await query('SELECT * FROM courpayant');
+      const results = await query('SELECT * FROM courgratuits');
       return res.status(200).json({ success: true, liste: results });
   } catch (err) {
       return errorHandler(res, err);

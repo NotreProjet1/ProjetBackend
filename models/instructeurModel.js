@@ -6,17 +6,17 @@ const saltRounds = 10;
 const query = util.promisify(dbConnection.query).bind(dbConnection);
 
 const Instructeur = {
-    register: async (participantData) => {
+    register: async (InstructeurData) => {
         try {
           // Assurez-vous que participantData.mots_de_passeP a une valeur définie.
-          if (!participantData.mots_de_passeP) {
+          if (!InstructeurData.mots_de_passeP) {
             throw new Error('Le mot de passe est requis pour l\'inscription.');
           }
     
-          const hashedmots_de_passeP = await bcrypt.hash(participantData.mots_de_passeP, saltRounds);
+          const hashedmots_de_passe= await bcrypt.hash(InstructeurData.mots_de_passeP, saltRounds);
           const result = await query(
-            'INSERT INTO participant (nom, prenom, email, mots_de_passe, categorie, domaine, role) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [participantData.nom, participantData.prenom, participantData.email, hashedmots_de_passe, participantData.categorie, participantData.domaine, participantData.role]
+            'INSERT INTO participant (avatar , nom, prenom, email, mots_de_passe, tel, specialite, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [InstructeurData.avatar,InstructeurData.nom, InstructeurData.prenom, InstructeurData.email, hashedmots_de_passe, InstructeurData.tel, InstructeurData.specialite, InstructeurData.role]
           );
           return result;
         } catch (error) {
@@ -48,10 +48,10 @@ getInstructeurById: async (id) => {
    
 updateInstructeur: async (id, instructeurData) => {
       try {
-          const { nom, prenom, email, tel, specialite, mots_de_passe,role } = instructeurData;
+          const {avatar , nom, prenom, email, tel, specialite, mots_de_passe,role } = instructeurData;
 
           // Validation
-          if (!nom || !prenom || !email || !tel || !specialite || !mots_de_passe || !role) {
+          if (!avatar || !nom || !prenom || !email || !tel || !specialite || !mots_de_passe || !role) {
               throw new Error('Tous les champs sont requis pour modifier un instructeur.');
           }
 
@@ -59,11 +59,11 @@ updateInstructeur: async (id, instructeurData) => {
 
           const updateQuery = `
               UPDATE instructeur
-              SET nom = ?, prenom = ?, email= ?, tel = ?, specialite = ?, mots_de_passe = ?,role = ?
+              SET avatar = ?,  nom = ?, prenom = ?, email= ?, tel = ?, specialite = ?, mots_de_passe = ?,role = ?
               WHERE id = ?
           `;
 
-          const result = await query(updateQuery, [nom, prenom, emailP, tel, specialite, hashedmots_de_passe,,role, id]);
+          const result = await query(updateQuery, [avatar ,nom, prenom, email, tel, specialite, hashedmots_de_passe,,role, id]);
           return result;
       } catch (error) {
           throw error;

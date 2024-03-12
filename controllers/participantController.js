@@ -1,11 +1,9 @@
-const Instructeur = require('../models/participantModel');
+const participant = require('../models/participantModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const util = require('util');
 const dbConnection = require('../config/db');
 const { generateToken, authenticateToken } = require('../middleware/authMiddleware'); // Ajout des importations
-const participant = require('../models/participantModel');
-
 const saltRounds = 10;
 const query = util.promisify(dbConnection.query).bind(dbConnection);
 
@@ -15,8 +13,8 @@ const errorHandler = (res, message) => {
 };
 
 const validateFields = (req, res) => {
-    const {avatar, nom, prenom, emailP, tel, specialite, mots_de_passeP } = req.body;
-    if (  !avatar ||!nom || !nom || !prenom || !emailP || !tel || !specialite || !mots_de_passeP) {
+    const {avatar, nom, prenom, emailP, domaine, categorie, mots_de_passeP , tel} = req.body;
+    if (  !avatar ||!nom || !nom || !prenom || !emailP || !domaine || !categorie || !mots_de_passeP || !tel)  {
         return res.status(400).json({ message: 'Tous les champs sont requis pour ajouter un Participant.' });
     }
     return true;
@@ -36,7 +34,7 @@ const listerParticipant = async (req, res) => {
 const modifierParticipant = async (req, res) => {
     try {
         const { id } = req.params;
-        const { avatar ,nom, prenom, email, tel, specialite, mots_de_passe, role } = req.body;
+        const { avatar ,nom, prenom, emailP, domaine, categorie, mots_de_passeP, role , tel } = req.body;
 
         // Check for the presence of the authorization header
         authenticateToken(req, res, async () => {
@@ -53,15 +51,15 @@ const modifierParticipant = async (req, res) => {
                 return res.status(400).json({ message: 'ID et tous les champs sont requis pour modifier un Participant.' });
             }
 
-            const hashedmots_de_passe = await bcrypt.hash(mots_de_passe, saltRounds);
+            const hashedmots_de_passeP = await bcrypt.hash(mots_de_passeP, saltRounds);
 
             const updateQuery = `
                 UPDATE Participant
-                SET avatar = ?, nom = ?, prenom = ?, email = ?, tel = ?, specialite = ?, mots_de_passe = ?, role = ?
+                SET avatar = ?, nom = ?, prenom = ?, emailP = ?, domaine = ?, categorie = ?, mots_de_passeP = ?, role = ? , tel = ? 
                 WHERE id = ?
             `;
 
-            const result = await query(updateQuery, [avatar,nom, prenom, email, tel, specialite, hashedmots_de_passe, role, id]);
+            const result = await query(updateQuery, [avatar,nom, prenom, emailP, domaine, categorie, hashedmots_de_passeP, role,  tel ,id]);
 
             return res.status(200).json({
                 message: 'Instructeur modifié avec succès.',

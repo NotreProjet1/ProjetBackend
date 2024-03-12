@@ -15,8 +15,8 @@ const participant = {
 
       const hashedmots_de_passeP = await bcrypt.hash(participantData.mots_de_passeP, saltRounds);
       const result = await query(
-        'INSERT INTO participant (avatr,nom, prenom, emailP, mots_de_passeP, categorie, domaine, role) VALUES (?, ?,?, ?, ?, ?, ?, ?)',
-        [participantData.avatr,participantData.nom, participantData.prenom, participantData.emailP, hashedmots_de_passeP, participantData.categorie, participantData.domaine, participantData.role]
+        'INSERT INTO participant (avatar,nom, prenom, emailP, mots_de_passeP, categorie, domaine, role, tel) VALUES (?, ?,?, ?, ?, ?, ?, ?,? )',
+        [participantData.avatar,participantData.nom, participantData.prenom, participantData.emailP, hashedmots_de_passeP, participantData.categorie, participantData.domaine, participantData.role , participantData.tel]
       );
       return result;
     } catch (error) {
@@ -54,6 +54,40 @@ const participant = {
     } catch (error) {
       throw error;
     }
+  },
+
+updateparticipant: async (id, participantData) => {
+      try {
+          const { nom, prenom, emailP, domaine, categorie, mots_de_passeP,role, tel } = participantData;
+
+          // Validation
+          if (!nom || !prenom || !emailP || !domaine || !categorie || !mots_de_passeP || !role || !tel) {
+              throw new Error('Tous les champs sont requis pour modifier un instructeur.');
+          }
+
+          const hashedmots_de_passeP = await bcrypt.hash(mots_de_passeP, saltRounds);
+
+          const updateQuery = `
+              UPDATE participant
+              SET nom = ?, prenom = ?, emailP= ?, domaine = ?, categorie = ?, mots_de_passeP = ?,role = ? ,tel = ?
+              WHERE id = ?
+          `;
+
+          const result = await query(updateQuery, [nom, prenom, emailP, domaine, categorie, hashedmots_de_passeP,role,tel , id]);
+          return result;
+      } catch (error) {
+          throw error;
+      }
+  },
+
+  deleteInstructeur: async (id) => {
+      try {
+          const deleteQuery = 'DELETE FROM participant WHERE id = ?';
+          const result = await query(deleteQuery, [id]);
+          return result;
+      } catch (error) {
+          throw error;
+      }
   },
 };
 
