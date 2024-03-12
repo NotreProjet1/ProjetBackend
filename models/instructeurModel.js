@@ -9,13 +9,13 @@ const Instructeur = {
     register: async (InstructeurData) => {
         try {
           // Assurez-vous que participantData.mots_de_passeP a une valeur définie.
-          if (!InstructeurData.mots_de_passeP) {
+          if (!InstructeurData.mots_de_passe) {
             throw new Error('Le mot de passe est requis pour l\'inscription.');
           }
     
-          const hashedmots_de_passe= await bcrypt.hash(InstructeurData.mots_de_passeP, saltRounds);
+          const hashedmots_de_passe= await bcrypt.hash(InstructeurData.mots_de_passe, saltRounds);
           const result = await query(
-            'INSERT INTO participant (avatar , nom, prenom, email, mots_de_passe, tel, specialite, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO instructeur (avatar , nom, prenom, email, mots_de_passe, tel, specialite, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
             [InstructeurData.avatar,InstructeurData.nom, InstructeurData.prenom, InstructeurData.email, hashedmots_de_passe, InstructeurData.tel, InstructeurData.specialite, InstructeurData.role]
           );
           return result;
@@ -30,7 +30,7 @@ login: async (email, mots_de_passe) => {
           const mots_de_passeMatch = await bcrypt.compare(mots_de_passe, results[0].mots_de_passe);
           return mots_de_passeMatch ? results[0] : null;
       } else {
-          return null; 
+          return null;  
       }
   } catch (error) {
       throw error;

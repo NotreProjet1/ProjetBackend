@@ -82,7 +82,7 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-    const { emailP, mots_de_passeP } = req.body;
+    const { emailP, mots_de_passeP } = req.body; 
 
     try {
         const user = await participant.login(emailP, mots_de_passeP);
