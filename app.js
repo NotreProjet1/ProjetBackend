@@ -12,7 +12,12 @@ const coursgratuis = require('./routes/CoursGroute')
 const publication = require('./routes/PublicationRoute')
 const instructeur = require('./routes/instructeurRoutes')
 const authMiddleware = require('./middleware/authMiddleware');
+const path = require('path');
+
 const port = process.env.PORT || 3001; 
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 // Configuration de CORS
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -24,6 +29,8 @@ app.use('/Resource', ResourceRoute);
 app.use('/Admin', AdminRoute); 
 app.use('/publication', publication); 
 app.use('/instructeur', instructeur); 
+const staticFilesPath = path.join(__dirname, 'upload'); // Chemin vers le dossier contenant les fichiers
+app.use(express.static(staticFilesPath));
 
 
 app.listen(port, () => {
