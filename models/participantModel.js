@@ -25,66 +25,17 @@ const participant = {
 
   login: async (emailP, mots_de_passeP) => {
     try {
-      const results = await query('SELECT * FROM participant WHERE emailP = ?', [emailP]);
-      if (results.length > 0) {
-        const mots_de_passeMatchP = await bcrypt.compare(mots_de_passeP, results[0].mots_de_passeP);
-        return mots_de_passeMatchP ? results[0] : null;
-      } else {
-        return null; 
-      }
+        const results = await query('SELECT * FROM participant WHERE emailP = ?', [emailP]);
+        if (results.length > 0) {
+            const mots_de_passeMatchP = await bcrypt.compare(mots_de_passeP, results[0].mots_de_passeP);
+            return mots_de_passeMatchP ? results[0] : null;
+        } else {
+            return null; 
+        }
     } catch (error) {
-      throw error;
+        throw error;
     }
   },
-   getById : async (id_p) => {
-    try {
-        const queryResult = await query('SELECT * FROM Participant WHERE id_p = ?', [id_p]);
-        return queryResult.length > 0 ? queryResult[0] : null;
-    } catch (error) {
-        throw new Error('Erreur lors de la récupération des détails du participant par ID: ' + error.message);
-    }
-},
-
-
-  getParticipantByEmail: async (emailP) => {
-    try {
-      const results = await query('SELECT * FROM participant WHERE emailP = ?', [emailP]);
-      console.log('Results:', results);
-      return results.length > 0 ? results[0] : null;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-//   login: async (emailP, mots_de_passeP) => {
-//     try {
-//         const results = await query('SELECT * FROM participant WHERE emailP = ?', [emailP]);
-//         if (results.length > 0) {
-//             const mots_de_passeMatchP = await bcrypt.compare(mots_de_passeP, results[0].mots_de_passeP);
-//             return mots_de_passeMatchP ? results[0] : null;
-//         } else {
-//             return null; 
-//         }
-//     } catch (error) {
-//         throw error;
-//     }
-// }
-// ,
-
-// login: async (emailP, mots_de_passeP) => {
-//   try {
-//       const results = await query('SELECT * FROM participant WHERE emailP = ?', [emailP]);
-//       if (results.length > 0) {
-//           const mots_de_passeMatch = await bcrypt.compare(mots_de_passeP, results[0].mots_de_passeP);
-//           return mots_de_passeMatch ? results[0] : null;
-//       } else {
-//           return null;  
-//       }
-//   } catch (error) {
-//       throw error;
-//   }
-// }
-// ,
   
 
 updateparticipant: async (id, participantData) => {
