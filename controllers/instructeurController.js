@@ -87,9 +87,13 @@ const login = async (req, res) => {
 
     try {
         const user = await Instructeur.login(email, mots_de_passe);
-
+       
         if (user) {
             const token = generateToken(user.id); // Utilisez la fonction importée d'authMiddleware
+            
+            // Envoyez le token JWT dans l'en-tête de la réponse HTTP
+            res.header('Authorization', `Bearer ${token}`);
+
             res.status(200).json({ success: true, message: 'Connexion réussie.', user, token });
         } else {
             res.status(401).json({ success: false, message: 'Email ou mot de passe incorrect.' });

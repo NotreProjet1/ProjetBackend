@@ -5,6 +5,8 @@ const router = express.Router();
 const participantController = require('../controllers/participantController');
 
 // Assurez-vous que votre route POST est correctement définie
+router.get('/:id', participantController.getParticipantById);
+
 router.post('/register', participantController.register);
 router.post('/login', participantController.login);
 router.post('/modifier', participantController.modifierParticipant);

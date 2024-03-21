@@ -29,7 +29,21 @@ const listerParticipant = async (req, res) => {
     }
 };
 
-
+const getParticipantById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const id_p = id ;
+        const participantData = await participant.getById(id_p);
+        if (participantData) {
+            res.status(200).json({ success: true, participant: participantData });
+        } else {
+            res.status(404).json({ success: false, message: 'Participant non trouvé.' });
+        }
+    } catch (error) {
+        console.error('Erreur lors de la récupération du participant par ID:', error);
+        res.status(500).json({ success: false, message: 'Erreur lors de la récupération du participant.' });
+    }
+};
 
 const modifierParticipant = async (req, res) => {
     try {
@@ -81,17 +95,38 @@ const register = async (req, res) => {
     }
 };
 
-const login = async (req, res) => {
-    const { emailP, mots_de_passeP } = req.body; 
+// const login = async (req, res) => {
+//     const { emailP, mots_de_passeP} = req.body; 
 
+//     try {
+//         const user = await participant.login(emailP, mots_de_passeP);
+
+//         if (user) {
+//             const token = generateToken(user.id); // Utilisez la fonction importée d'authMiddleware
+//             res.status(200).json({ success: true, message: 'Connexion réussie.', user, token });
+//         } else {
+//             res.status(401).json({ success: false, message: 'Email ou mot de passe incorrect.' });
+//         }
+//     } catch (error) {
+//         errorHandler(res, 'Erreur lors de la connexion: ' + error.message);
+//     }
+// };
+const login = async (req, res) => {
+    const { email, mots_de_passe } = req.body;
+const emailP = email;
+const mots_de_passeP =mots_de_passe;
     try {
         const user = await participant.login(emailP, mots_de_passeP);
-
+       
         if (user) {
             const token = generateToken(user.id); // Utilisez la fonction importée d'authMiddleware
+            
+            // Envoyez le token JWT dans l'en-tête de la réponse HTTP
+            res.header('Authorization', `Bearer ${token}`);
+
             res.status(200).json({ success: true, message: 'Connexion réussie.', user, token });
         } else {
-            res.status(401).json({ success: false, message: 'Email ou mot de passe incorrect.' });
+            res.status(401).json({ success: false, message: 'Email ou mot de passe incorrect. participant ' });
         }
     } catch (error) {
         errorHandler(res, 'Erreur lors de la connexion: ' + error.message);
@@ -130,5 +165,6 @@ module.exports = {
     modifierParticipant,
     supprimerParticipant,
     register,
-    login
+    login,
+    getParticipantById
 };

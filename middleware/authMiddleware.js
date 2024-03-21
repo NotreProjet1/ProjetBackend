@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const secretKey = 'votre_clé_secrète'; // Remplacez ceci par votre propre clé secrète
 
 const generateToken = (userId) => {
-    return jwt.sign({ id: userId }, secretKey, { expiresIn: '1h' }); // Vous pouvez ajuster la durée de validité du token selon vos besoins
+    return jwt.sign({ id: userId }, secretKey, { expiresIn: '2h' }); // Vous pouvez ajuster la durée de validité du token selon vos besoins
 };
 
 const authenticateToken = (req, res, next) => {

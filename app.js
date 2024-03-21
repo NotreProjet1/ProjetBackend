@@ -29,8 +29,10 @@ app.use('/Resource', ResourceRoute);
 app.use('/Admin', AdminRoute); 
 app.use('/publication', publication); 
 app.use('/instructeur', instructeur); 
-const staticFilesPath = path.join(__dirname, 'upload'); // Chemin vers le dossier contenant les fichiers
-app.use(express.static(staticFilesPath));
+const staticFilesPath = path.join(__dirname, 'upload');
+
+// Servir les fichiers statiques depuis le dossier upload
+app.use('/uploads', express.static(staticFilesPath));
 
 
 app.listen(port, () => {

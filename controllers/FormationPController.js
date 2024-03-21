@@ -8,42 +8,79 @@ const errorHandler = (res, message) => {
     console.error(message);
     return res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
 };
-
 const createFormation = async (req, res) => {
     try {
-      const { titre, description, prix, certeficat, domaine,niveaux } = req.body;
-     
-      
-      // Vérifier si tous les champs requis sont présents
-      if (!titre || !description || !domaine || !prix || !certeficat || !niveaux ) {
-        return res.status(400).json({ success: false, message: 'Veuillez fournir toutes les données requises.' });
-      }
+        // Utiliser authenticateToken pour vérifier le token
+        authenticateToken(req, res, async () => {
+            // Vérifier si le token est correctement attaché à la requête
+            if (!req.user || !req.user.id) {
+                return res.status(401).json({ success: false, message: 'Token invalide. Authentifiez-vous pour accéder à cette ressource.' });
+            }
 
-      // Traiter le fichier s'il est téléchargé
-      // let plant = null;
-      // if (req.file) {
-      //   plant = req.file.buffer; // Utilisez req.file.buffer pour obtenir les données binaires du fichier
-      // } else {
-      //   return res.status(400).json({ success: false, message: 'Veuillez fournir un fichier.' });
-      // }
-  
-    //   Créer la formation dans la base de données
-    const plant = req.Fnameup;
-      const formationData = { titre, description, domaine, plant, prix, certeficat, niveaux };
-      const result = await FormationModel.createFormation(formationData);
-      const formationId = result.insertId;
-      req.Fnameup = undefined;
-      res.status(201).json({ 
-        success: true,
-        message: 'Formation créée avec succès.',
-        formationId: formationId
-      });
+            // Récupérer l'ID de l'utilisateur à partir du token
+            const instructeurfp_id = req.user.id;
+
+            // Récupérer les données de la requête
+            const { titre, description, prix, certeficat, domaine, niveaux } = req.body;
+
+            // Vérifier si tous les champs requis sont présents
+
+            // Vérifier si tous les champs requis sont présents
+            if (!titre || !description || !domaine || !prix || !certeficat || !niveaux) {
+                return res.status(400).json({ success: false, message: 'Veuillez fournir toutes les données requises.' });
+            }
+
+            // Récupérer le contenu du cours depuis req.Fnameup
+            const contenu = req.Fnameup;
+
+            const plant = req.Fnameup;
+            const formationData = { titre, description, domaine, plant, prix, certeficat, niveaux, instructeur_id: instructeurfp_id };
+            const result = await FormationModel.createFormation(formationData);
+            const formationId = result.insertId;
+            req.Fnameup = undefined;
+
+            res.status(201).json({
+                success: true,
+                message: 'Formation créée avec succès.',
+                formationId: formationId
+            });
+        });
     } catch (error) {
-      console.error('Error in createFormation:', error);
-      res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
+        console.error('Error in createFormation:', error);
+        res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
     }
-  };
-  
+};
+
+// const createFormation = async (req, res, token) => {
+//     try {
+//         // Utilisez le token d'authentification pour obtenir l'ID de l'instructeur
+//         const instructeurId = req.user.id;
+
+//         // Insérer ici le code pour créer la formation...
+//         const { titre, description, prix, certeficat, domaine, niveaux } = req.body;
+
+//         // Vérifier si tous les champs requis sont présents
+//         if (!titre || !description || !domaine || !prix || !certeficat || !niveaux) {
+//             return res.status(400).json({ success: false, message: 'Veuillez fournir toutes les données requises.' });
+//         }
+
+//         // Créer la formation dans la base de données
+//         const plant = req.Fnameup;
+//         const formationData = { titre, description, domaine, plant, prix, certeficat, niveaux, instructeur_id: instructeurId };
+//         const result = await FormationModel.createFormation(formationData);
+//         const formationId = result.insertId;
+//         req.Fnameup = undefined;
+//         res.status(201).json({
+//             success: true,
+//             message: 'Formation créée avec succès.',
+//             formationId: formationId
+//         });
+//     } catch (error) {
+//         console.error('Error in createFormation:', error);
+//         res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
+//     }
+// };
+
 const updateFormation = async (id_fp, titre, description, contenu, domaine, plant, prix, certeficat) => {
     const updateQuery = `
         UPDATE formation_p
@@ -65,7 +102,7 @@ const updateFormation = async (id_fp, titre, description, contenu, domaine, plan
 const getAllFormations = async (req, res) => {
     try {
         const results = await query('SELECT * FROM formation_p');
-        
+
         // Convertir les résultats en une structure de données simple
         const formations = results.map(result => ({ ...result }));
 
