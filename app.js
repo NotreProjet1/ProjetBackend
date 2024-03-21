@@ -4,7 +4,7 @@ const cors = require('cors');
 const app = express();
 const bodyParser = require('body-parser');
 const participantRoutes = require('./routes/participantRoutes');
-const courseRoutes = require('./routes/Coursroute');
+const courseRoutes = require('./routes/CoursProute');
 const formationPRout = require('./routes/FormationPRoutes')
 const ResourceRoute = require('./routes/RessourceRoute')
 const AdminRoute = require('./routes/AdminRoute')
@@ -14,7 +14,7 @@ const instructeur = require('./routes/instructeurRoutes')
 const authMiddleware = require('./middleware/authMiddleware');
 const path = require('path');
 
-const port = process.env.PORT || 3001; 
+const port = process.env.PORT || 3000; 
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -23,7 +23,7 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use('/participant', participantRoutes);
-app.use('/cours', coursgratuis);
+app.use('/cours', courseRoutes);
 app.use('/formationP', formationPRout);
 app.use('/Resource', ResourceRoute);
 app.use('/Admin', AdminRoute); 

@@ -1,45 +1,66 @@
+// coursPModel.js
 const db = require('../config/db');
+const express = require('express');
 
-const createCourse = (titre, contenu, description) => {
-    const query = 'INSERT INTO courpayant (titre, contenu, description) VALUES (?, ?, ?)';
-    return db.query(query, [titre, contenu, description]);
+const app = express();
+
+const bodyParser = require('body-parser');
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+const createcours = async (coursData) => {
+    try {
+        const { titre, description,  contenu } = coursData;
+        const query = 'INSERT INTO courpayant (titre, description, contenu) VALUES (?, ?,?)';
+        const result = await db.query(query, [titre	, description, contenu]);
+        return result;
+    } catch (error) {
+        throw new Error('Erreur lors de la création de la cours dans la base de données');
+    }
 };
+const getcoursById = async (id_fp) => {
+    try {
+      const query = 'SELECT * FROM courpayant WHERE id_fp = ?';
+      const [rows] = await db.query(query, [id_fp]);
+  
+      if (rows.length === 0) {
+        return null; // Aucune cours trouvée pour cet ID
+      }
+  
+      return rows[0]; // Retourne le premier élément du tableau (la cours correspondante)
+    } catch (error) {
+      throw error; // Propage l'erreur pour être gérée dans le contrôleur
+    }
+  };
 
-const getAllCourses = () => {
+
+const getAllcourss = () => {
     const query = 'SELECT * FROM courpayant';
     return db.query(query);
 };
 
-const getCourseById = (courseId) => {
-    const query = 'SELECT * FROM courpayant WHERE id = ?';
-    return db.query(query, [courseId]);
+const updatecours = (id, titre, description, contenu) => {
+    const query = 'UPDATE courpayant SET titre = ?, description = ?, contenu = ? WHERE id_fp = ?';
+    return db.query(query, [titre, description, contenu, id]);
 };
 
-const updateCourse = (courseId, titre, contenu, description) => {
-    const query = 'UPDATE courpayant SET titre = ?, contenu = ?, description = ? WHERE id = ?';
-    return db.query(query, [titre, contenu, description, courseId]);
+const deletecours = (id) => {
+    const query = 'DELETE FROM courpayant WHERE id_fp = ?';
+    return db.query(query, [id]);
 };
 
-const deleteCourse = (courseId) => {
-    const query = 'DELETE FROM courpayant WHERE id = ?';
-    return db.query(query, [courseId]);
-};
-
-const searchCourses = (searchTerm) => {
-    const query = `
-        SELECT *
-        FROM courpayant
-        WHERE titre LIKE ? OR contenu LIKE ? OR description LIKE ?
-    `;
-    const searchPattern = `%${searchTerm}%`;
-    return db.query(query, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern]);
+const searchcourssByTitre = (titre) => {
+    const query = 'SELECT * FROM courpayant WHERE titre LIKE ?';
+    const searchPattern = `%${titre}%`;
+    return db.query(query, [searchPattern]);
 };
 
 module.exports = {
-    createCourse,
-    getAllCourses,
-    getCourseById,
-    updateCourse,
-    deleteCourse,
-    searchCourses,
+    createcours,
+    getAllcourss,
+    updatecours,
+    deletecours,
+    searchcourssByTitre,
+    getcoursById
 };

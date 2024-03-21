@@ -34,43 +34,41 @@ const listerInstructeurs = async (req, res) => {
 
 const modifierInstructeur = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { nom, prenom, email, tel, specialite, mots_de_passe, role } = req.body;
+        const { id: instructeurId } = req.params;
+        const { nom, prenom, email, tel, specialite, mots_de_passe, role, userId } = req.body;
 
-        // Check for the presence of the authorization header
-        authenticateToken(req, res, async () => {
-            // Now you can access the user information from req.user
-            const userId = req.user.id;
-            const userRole = req.user.role;  // Assuming you have the role in the user object
+        if (instructeurId !== userId) {
+            return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à modifier cet instructeur.' });
+        }
 
-            // Ensure the user has the required role
-            if (userRole !== 'instructeur' ) {
-                return res.status(403).json({ message: 'Permission denied. Insufficient role.' });
-            }
+        if (!id || !validateFields(req, res)) {
+            return res.status(400).json({ message: 'ID et tous les champs sont requis pour modifier un instructeur.' });
+        }
 
-            if (!id || !validateFields(req, res)) {
-                return res.status(400).json({ message: 'ID et tous les champs sont requis pour modifier un instructeur.' });
-            }
+        // Vérifiez si l'ID de l'instructeur correspond à celui de l'utilisateur authentifié
+        if (id !== instructeurId) {
+            return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à modifier cet instructeur.' });
+        }
 
-            const hashedmots_de_passe = await bcrypt.hash(mots_de_passe, saltRounds);
+        const hashedmots_de_passe = await bcrypt.hash(mots_de_passe, saltRounds);
 
-            const updateQuery = `
-                UPDATE instructeur
-                SET nom = ?, prenom = ?, email = ?, tel = ?, specialite = ?, mots_de_passe = ?, role = ?
-                WHERE id = ?
-            `;
+        const updateQuery = `
+            UPDATE instructeur
+            SET nom = ?, prenom = ?, email = ?, tel = ?, specialite = ?, mots_de_passe = ?, role = ?
+            WHERE instructeurId = ?
+        `;
 
-            const result = await query(updateQuery, [nom, prenom, email, tel, specialite, hashedmots_de_passe, role, id]);
+        const result = await query(updateQuery, [nom, prenom, email, tel, specialite, hashedmots_de_passe, role, id]);
 
-            return res.status(200).json({
-                message: 'Instructeur modifié avec succès.',
-                instructeur: result
-            });
+        return res.status(200).json({
+            message: 'Instructeur modifié avec succès.',
+            instructeur: result
         });
     } catch (err) {
         return errorHandler(res, err);
     }
 };
+
 const register = async (req, res) => {
     const instructeurData = req.body;
 
@@ -87,10 +85,9 @@ const login = async (req, res) => {
 
     try {
         const user = await Instructeur.login(email, mots_de_passe);
-
+       
         if (user) {
-            const token = generateToken(user.id); // Utilisez la fonction importée d'authMiddleware
-            res.status(200).json({ success: true, message: 'Connexion réussie.', user, token });
+            res.status(200).json({ success: true, message: 'Connexion réussie.', userId: user.id });
         } else {
             res.status(401).json({ success: false, message: 'Email ou mot de passe incorrect.' });
         }
@@ -98,6 +95,9 @@ const login = async (req, res) => {
         errorHandler(res, 'Erreur lors de la connexion: ' + error.message);
     }
 };
+
+
+
 
 const supprimerInstructeur = async (req, res) => {
     try {

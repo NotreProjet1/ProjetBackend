@@ -1,88 +1,127 @@
 const CoursModel = require('../models/CoursPModel');
 const db = require('../config/db');
-const { authenticateToken } = require('../middleware/authMiddleware');
 const util = require('util');
-
 const query = util.promisify(db.query).bind(db);
+const { authenticateToken } = require('../middleware/authMiddleware');
 
 const errorHandler = (res, message) => {
     console.error(message);
     return res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
 };
 
-const createCourse = async (req, res) => {
+const createcours = async (req, res) => {
     try {
-        authenticateToken(req, res, async () => {
-            const { titre, contenu, description } = req.body;
-            const userId = req.user.id;
+      const { titre, description } = req.body;
+     
+      
+      // Vérifier si tous les champs requis sont présents
+      if (!titre || !description  ) {
+        return res.status(400).json({ success: false, message: 'Veuillez fournir toutes les données requises.' });
+      }
 
-            const result = await CoursModel.createCourse(titre, contenu, description, userId);
-            const courseId = result.insertId;
-
-            res.status(201).json({
-                success: true,
-                message: 'Cours créé avec succès.',
-                courseId: courseId
-            });
-        });
+      // Traiter le fichier s'il est téléchargé
+      // let contenu = null;
+      // if (req.file) {
+      //   contenu = req.file.buffer; // Utilisez req.file.buffer pour obtenir les données binaires du fichier
+      // } else {
+      //   return res.status(400).json({ success: false, message: 'Veuillez fournir un fichier.' });
+      // }
+  
+    //   Créer la cours dans la base de données
+    const contenu = req.Fnameup;
+      const coursData = { titre, description, contenu };
+      const result = await CoursModel.createcours(coursData);
+      const coursId = result.insertId;
+      req.Fnameup = undefined;
+      res.status(201).json({ 
+        success: true,
+        message: 'cours créée avec succès.',
+        coursId: coursId
+      });
     } catch (error) {
-        console.error('Error in createCourse:', error);
-        res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
+      console.error('Error in createcours:', error);
+      res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
+    }
+  };
+  
+const updatecours = async (id_fp, titre, description) => {
+    const updateQuery = `
+        UPDATE courpayant
+        SET titre = ?, description = ?, contenu = ?
+        WHERE id_fp = ?
+    `;
+
+    await db.query(updateQuery, [titre, description, id_fp]);
+
+    // Sélectionnez la cours mise à jour après la mise à jour
+    const selectQuery = 'SELECT * FROM courpayant WHERE id_fp = ?';
+    const [updatedcours] = await db.query(selectQuery, [id_fp]);
+
+    return updatedcours;
+};
+
+
+
+const getAllcourss = async (req, res) => {
+    try {
+        const results = await query('SELECT * FROM courpayant');
+        
+        // Convertir les résultats en une structure de données simple
+        const courss = results.map(result => ({ ...result }));
+
+        return res.status(200).json({ success: true, liste: courss });
+    } catch (err) {
+        return errorHandler(res, err);
     }
 };
 
 
-const getAllCourses = async (req, res) => {
-  try {
-      const results = await query('SELECT * FROM courpayant');
-      return res.status(200).json({ success: true, liste: results });
-  } catch (err) {
-      return errorHandler(res, err);
-  }
-};
 
 
-const updateCourse = async (req, res) => {
+const deletecours = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { titre, contenu, description } = req.body;
+        const { id_fp } = req.params;
+        const result = await CoursModel.deletecours(id_fp);
 
-        const result = await CoursModel.updateCourse(id, titre, contenu, description);
-        res.status(200).json({ success: true, message: 'Cours modifié avec succès.', result });
+        res.status(200).json({ success: true, message: 'cours supprimée avec succès.', result });
     } catch (error) {
-        console.error('Error in updateCourse:', error);
+        console.error('Error in deletecours:', error);
         res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
     }
 };
 
-const deleteCourse = async (req, res) => {
+const searchcourssByTitre = async (req, res) => {
     try {
-        const { id } = req.params;
-        const result = await CoursModel.deleteCourse(id);
+        const { titre } = req.query;
+        const results = await CoursModel.searchcourssByTitre(titre);
 
-        res.status(200).json({ success: true, message: 'Cours supprimé avec succès.', result });
+        res.status(200).json({ success: true, courss: results });
     } catch (error) {
-        console.error('Error in deleteCourse:', error);
+        console.error('Error in searchcourssByTitre:', error);
         res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
     }
 };
-
-const searchCourses = async (req, res) => {
+const getcoursById = async (req, res) => {
     try {
-        const { searchTerm } = req.query;
-        const results = await CoursModel.searchCourses(searchTerm);
+        const { id_fp } = req.params;
+        const cours = await CoursModel.getcoursById(id_fp);
 
-        res.status(200).json({ success: true, courses: results });
+        if (!cours) {
+            return res.status(404).json({ success: false, message: 'cours non trouvée.' });
+        }
+
+        res.status(200).json({ success: true, cours });
     } catch (error) {
-        console.error('Error in searchCourses:', error);
+        console.error('Error in getcoursById:', error);
         res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
     }
 };
 
 module.exports = {
-    createCourse,
-    getAllCourses,
-    updateCourse,
-    deleteCourse,
-    searchCourses
+    createcours,
+    getAllcourss,
+    updatecours,
+    deletecours,
+    searchcourssByTitre,
+    getcoursById
 };

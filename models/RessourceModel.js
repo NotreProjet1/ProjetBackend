@@ -1,45 +1,66 @@
+// ressourcePModel.js
 const db = require('../config/db');
+const express = require('express');
 
-const createResssource = (titre, contenu, description ,type) => {
-    const query = 'INSERT INTO ressource_pedagogique (titre, contenu, description , type) VALUES (?, ?, ?, ?)';
-    return db.query(query, [titre, contenu, description , type]);
+const app = express();
+
+const bodyParser = require('body-parser');
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+const createressource = async (ressourceData) => {
+    try {
+        const { titre, description,  contenu } = ressourceData;
+        const query = 'INSERT INTO ressource_pedagogique (titre, description, contenu) VALUES (?, ?,?)';
+        const result = await db.query(query, [titre	, description, contenu]);
+        return result;
+    } catch (error) {
+        throw new Error('Erreur lors de la création de la ressource dans la base de données');
+    }
 };
+const getressourceById = async (id_fp) => {
+    try {
+      const query = 'SELECT * FROM ressource_pedagogique WHERE id_fp = ?';
+      const [rows] = await db.query(query, [id_fp]);
+  
+      if (rows.length === 0) {
+        return null; // Aucune ressource trouvée pour cet ID
+      }
+  
+      return rows[0]; // Retourne le premier élément du tableau (la ressource correspondante)
+    } catch (error) {
+      throw error; // Propage l'erreur pour être gérée dans le contrôleur
+    }
+  };
 
-const getAllResssources = () => {
+
+const getAllressources = () => {
     const query = 'SELECT * FROM ressource_pedagogique';
     return db.query(query);
 };
 
-const getResssourceById = (ResssourceId) => {
-    const query = 'SELECT * FROM ressource_pedagogique WHERE id = ?';
-    return db.query(query, [ResssourceId]);
+const updateressource = (id, titre, description, contenu) => {
+    const query = 'UPDATE ressource_pedagogique SET titre = ?, description = ?, contenu = ? WHERE id_fp = ?';
+    return db.query(query, [titre, description, contenu, id]);
 };
 
-const updateResssource = (ResssourceId, titre, contenu, description , type) => {
-    const query = 'UPDATE ressource_pedagogique SET titre = ?, contenu = ?, description = ?  , type=? WHERE id = ?';
-    return db.query(query, [titre, contenu, description,type, ResssourceId]);
+const deleteressource = (id) => {
+    const query = 'DELETE FROM ressource_pedagogique WHERE id_fp = ?';
+    return db.query(query, [id]);
 };
 
-const deleteResssource = (ResssourceId) => {
-    const query = 'DELETE FROM ressource_pedagogique WHERE id = ?';
-    return db.query(query, [ResssourceId]);
-};
-
-const searchResssources = (searchTerm) => {
-    const query = `
-        SELECT *
-        FROM ressource_pedagogique
-        WHERE titre LIKE ? OR contenu LIKE ? OR description LIKE ?
-    `;
-    const searchPattern = `%${searchTerm}%`;
-    return db.query(query, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern]);
+const searchressourcesByTitre = (titre) => {
+    const query = 'SELECT * FROM ressource_pedagogique WHERE titre LIKE ?';
+    const searchPattern = `%${titre}%`;
+    return db.query(query, [searchPattern]);
 };
 
 module.exports = {
-    createResssource,
-    getAllResssources,
-    getResssourceById,
-    updateResssource,
-    deleteResssource,
-    searchResssources,
+    createressource,
+    getAllressources,
+    updateressource,
+    deleteressource,
+    searchressourcesByTitre,
+    getressourceById
 };

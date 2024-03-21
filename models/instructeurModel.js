@@ -63,7 +63,7 @@ updateInstructeur: async (id, instructeurData) => {
               WHERE id = ?
           `;
 
-          const result = await query(updateQuery, [avatar ,nom, prenom, email, tel, specialite, hashedmots_de_passe,,role, id]);
+          const result = await query(updateQuery, [avatar ,nom, prenom, email, tel, specialite, hashedmots_de_passe,role, id]);
           return result;
       } catch (error) {
           throw error;

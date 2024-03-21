@@ -36,16 +36,27 @@ const participant = {
   login: async (emailP, mots_de_passeP) => {
     try {
         const results = await query('SELECT * FROM participant WHERE emailP = ?', [emailP]);
+
         if (results.length > 0) {
             const mots_de_passeMatchP = await bcrypt.compare(mots_de_passeP, results[0].mots_de_passeP);
-            return mots_de_passeMatchP ? results[0] : null;
+
+            if (mots_de_passeMatchP) {
+                // Les identifiants sont corrects, renvoyer l'utilisateur
+                return results[0];
+            } else {
+                console.log("Mot de passe incorrect");
+                return null;
+            }
         } else {
-            return null; 
+            console.log("Aucun utilisateur trouvé avec cet email");
+            return null;
         }
     } catch (error) {
-        throw error;
+        console.error("Erreur lors de la connexion:", error);
+        throw error; // Renvoyer l'erreur pour le traitement ultérieur
     }
-  },
+},
+
   
 
 updateparticipant: async (id, participantData) => {
