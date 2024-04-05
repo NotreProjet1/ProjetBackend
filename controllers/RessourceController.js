@@ -1,53 +1,50 @@
-const ressourceModel = require('../models/RessourceModel');
+const RessourceModel = require('../models/RessourceModel');
 const db = require('../config/db');
 const util = require('util');
 const query = util.promisify(db.query).bind(db);
-const { authenticateToken , generateToken } = require('../middleware/authMiddleware');
+const { authenticateToken } = require('../middleware/authMiddleware');
 
 const errorHandler = (res, message) => {
     console.error(message);
     return res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
 };
 
-const createressource = async (req, res) => {
+const createRessource = async (req, res) => {
     try {
-        // Utiliser authenticateToken pour vérifier le token
-        (req, res, async () => {
-            // Vérifier si le token est correctement attaché à la requête
-         
+      const { titre, description } = req.body;
+     
+      
+      // Vérifier si tous les champs requis sont présents
+      if (!titre || !description  ) {
+        return res.status(400).json({ success: false, message: 'Veuillez fournir toutes les données requises.' });
+      }
 
-            // Récupérer l'ID de l'utilisateur à partir du token
-            const userId = req.user.id;
-
-            // Récupérer les données de la requête
-            const { titre, description } = req.body;
-
-            // Vérifier si tous les champs requis sont présents
-            if (!titre || !description || !req.Fnameup) {
-                return res.status(400).json({ success: false, message: 'Veuillez fournir toutes les données requises.' });
-            }
-
-            // Récupérer le contenu du cours depuis req.Fnameup
-            const contenu = req.Fnameup;
-
-            // Créer la ressource dans la base de données avec l'ID de l'utilisateur
-            const ressourceData = { titre, description, contenu, userId };
-            const result = await ressourceModel.createressource(ressourceData);
-            const ressourceId = result.insertId;
-
-            res.status(201).json({
-                success: true,
-                message: 'Ressource créée avec succès.',
-                ressourceId: ressourceId
-            });
-        });
+      // Traiter le fichier s'il est téléchargé
+      // let contenu = null;
+      // if (req.file) {
+      //   contenu = req.file.buffer; // Utilisez req.file.buffer pour obtenir les données binaires du fichier
+      // } else {
+      //   return res.status(400).json({ success: false, message: 'Veuillez fournir un fichier.' });
+      // }
+  
+    //   Créer la Ressource dans la base de données
+    const contenu = req.Fnameup;
+      const RessourceData = { titre, description, contenu };
+      const result = await RessourceModel.createRessource(RessourceData);
+      const RessourceId = result.insertId;
+      req.Fnameup = undefined;
+      res.status(201).json({ 
+        success: true,
+        message: 'Ressource créée avec succès.',
+        RessourceId: RessourceId
+      });
     } catch (error) {
-        console.error('Error in createressource:', error);
-        res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
+      console.error('Error in createRessource:', error);
+      res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
     }
-};
-
-const updateressource = async (id_r, titre, description) => {
+  };
+  
+const updateRessource = async (id_r, titre, description) => {
     const updateQuery = `
         UPDATE ressource_pedagogique
         SET titre = ?, description = ?, contenu = ?
@@ -56,27 +53,23 @@ const updateressource = async (id_r, titre, description) => {
 
     await db.query(updateQuery, [titre, description, id_r]);
 
-    // Sélectionnez la ressource mise à jour après la mise à jour
+    // Sélectionnez la Ressource mise à jour après la mise à jour
     const selectQuery = 'SELECT * FROM ressource_pedagogique WHERE id_r = ?';
-    const [updatedressource] = await db.query(selectQuery, [id_r]);
+    const [updatedRessource] = await db.query(selectQuery, [id_r]);
 
-    return updatedressource;
+    return updatedRessource;
 };
 
 
-const getAllressources = async (req, res) => {
+
+const getAllRessources = async (req, res) => {
     try {
         const results = await query('SELECT * FROM ressource_pedagogique');
         
         // Convertir les résultats en une structure de données simple
-        const ressources = results.map(result => ({
-            id: result.id,
-            titre: result.titre,
-            description: result.description,
-            plantFile: result.plantFile // Envoyer juste le nom du fichier
-        }));
+        const Ressources = results.map(result => ({ ...result }));
 
-        return res.status(200).json({ success: true, liste: ressources });
+        return res.status(200).json({ success: true, liste: Ressources });
     } catch (err) {
         return errorHandler(res, err);
     }
@@ -85,52 +78,57 @@ const getAllressources = async (req, res) => {
 
 
 
-
-
-const deleteressource = async (req, res) => {
+const deleteRessource = async (req, res) => {
     try {
         const { id_r } = req.params;
-        const result = await ressourceModel.deleteressource(id_r);
+        const result = await RessourceModel.deleteRessource(id_r);
 
-        res.status(200).json({ success: true, message: 'ressource supprimée avec succès.', result });
+        res.status(200).json({ success: true, message: 'Ressource supprimée avec succès.', result });
     } catch (error) {
-        console.error('Error in deleteressource:', error);
+        console.error('Error in deleteRessource:', error);
         res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
     }
 };
 
-const searchressourcesByTitre = async (req, res) => {
+
+const searchRessourcesByTitre = async (req, res) => {
     try {
         const { titre } = req.query;
-        const results = await ressourceModel.searchressourcesByTitre(titre);
+        // Utilisez LIKE pour rechercher les correspondances partielles dans la base de données
+        const results = await query('SELECT * FROM ressource_pedagogique WHERE titre LIKE ?', [`%${titre}%`]);
 
-        res.status(200).json({ success: true, ressources: results });
+        // Convertissez les résultats en une structure de données simple
+        const courss = results.map(result => ({ ...result }));
+
+        res.status(200).json({ success: true, courss });
     } catch (error) {
-        console.error('Error in searchressourcesByTitre:', error);
+        console.error('Error in searchcourssByTitre:', error);
         res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
     }
 };
-const getressourceById = async (req, res) => {
+
+const getRessourceById = async (req, res) => {
     try {
-        const { id_r } = req.params;
-        const ressource = await ressourceModel.getressourceById(id_r);
-
-        if (!ressource) {
-            return res.status(404).json({ success: false, message: 'ressource non trouvée.' });
+        const { id } = req.params;
+        const id_r=id;
+        const RessourceModel1 = await RessourceModel.getRessourceById(id_r);
+        if (RessourceModel1) {
+            res.status(200).json({ success: true, Ressource: RessourceModel1 });
+        } else {
+            res.status(404).json({ success: false, message: 'Instructeur non trouvé.' });
         }
-
-        res.status(200).json({ success: true, ressource });
     } catch (error) {
-        console.error('Error in getressourceById:', error);
-        res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
+        console.error('Erreur lors de la récupération du formation par ID:', error);
+        res.status(500).json({ success: false, message: 'Erreur lors de la récupération du formation.' });
     }
 };
+
 
 module.exports = {
-    createressource,
-    getAllressources,
-    updateressource,
-    deleteressource,
-    searchressourcesByTitre,
-    getressourceById
+    createRessource,
+    getAllRessources,
+    updateRessource,
+    deleteRessource,
+    searchRessourcesByTitre,
+    getRessourceById
 };

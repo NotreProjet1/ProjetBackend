@@ -8,31 +8,88 @@ const bodyParser = require('body-parser');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+const util = require('util');
 
-const createFormation = async (formationData) => {
+const query = util.promisify(db.query).bind(db);
+
+// const createFormation = async (formationData) => {
+//     try {
+//         const { titre, description, domaine, plant, prix, certeficat, niveaux } = formationData;
+//         const insertQuery = `
+//             INSERT INTO formation_p (titre, description, domaine, plant, prix, certeficat, niveaux)
+//             VALUES (?, ?, ?, ?, ?, ?,?)
+//         `;
+//         const result = await db.query(insertQuery, [titre, description, domaine, plant, prix, certeficat, niveaux]);
+//         return result;
+//     } catch (error) {
+//         throw error;
+//     }
+// };
+// const createFormation = async (req, res) => {
+//     try {
+//         const { titre, description, domaine, niveaux, prix, certeficat } = req.body;
+//         const { coursIds } = req.body; // Tableau d'identifiants de cours
+        
+//         // Vérifiez si tous les champs requis sont présents
+//         if (!titre || !description || !domaine || !niveaux || !prix || !certeficat) {
+//             return res.status(400).json({ success: false, message: 'Veuillez fournir toutes les données requises.' });
+//         }
+
+//         // Créez la formation dans la base de données
+//         const plant = req.Fnameup;
+//         const formationData = { titre, description, domaine, plant, niveaux, prix, certeficat };
+//         const result = await FormationModel.createFormation(formationData, coursIds); // Passez les identifiants de cours
+        
+//         const formationId = result.insertId;
+//         req.Fnameup = undefined;
+        
+//         res.status(201).json({ 
+//             success: true,
+//             message: 'Formation créée avec succès.',
+//             formationId: formationId
+//         });
+//     } catch (error) {
+//         console.error('Erreur lors de la création de la formation :', error);
+//         res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
+//     }
+// };
+const createFormation = async (formationData, coursIds) => {
     try {
-        const { titre,niveaux, description, domaine, prix, certeficat, plant } = formationData;
-        const query = 'INSERT INTO formation_p (titre,niveaux, description, domaine, prix, certeficat, plant) VALUES (?, ?,?, ?, ?, ?, ?)';
-        const result = await db.query(query, [titre,niveaux	, description, domaine, prix, certeficat, plant]);
+        const { titre, description, domaine, plant, prix, certeficat, niveaux } = formationData;
+        
+        // Insérez la formation dans la base de données
+        const insertQuery = `
+            INSERT INTO formation_p (titre, description, domaine, plant, prix, certeficat, niveaux)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
+        const result = await db.query(insertQuery, [titre, description, domaine, plant, prix, certeficat, niveaux]);
+        const formationId = result.insertId;
+        
+        // Associez les cours à la formation
+        if (coursIds && coursIds.length > 0) {
+            const associationQuery = `
+                INSERT INTO courpayant (formation_id, id_cp ) VALUES ?
+            `;
+            const values = coursIds.map(id_coursp => [formationId, id_coursp]);
+            await db.query(associationQuery, [values]);
+        }
+        
         return result;
     } catch (error) {
-        throw new Error('Erreur lors de la création de la formation dans la base de données');
+        throw error;
     }
 };
+
+
 const getFormationById = async (id_fp) => {
     try {
-      const query = 'SELECT * FROM formation_p WHERE id_fp = ?';
-      const [rows] = await db.query(query, [id_fp]);
-  
-      if (rows.length === 0) {
-        return null; // Aucune formation trouvée pour cet ID
-      }
-  
-      return rows[0]; // Retourne le premier élément du tableau (la formation correspondante)
+        const results = await query('SELECT * FROM formation_p WHERE id_fp = ?', [id_fp]);
+        return results.length > 0 ? results[0] : null;
     } catch (error) {
-      throw error; // Propage l'erreur pour être gérée dans le contrôleur
+        throw error;
     }
-  };
+};
+
 
 
 const getAllFormations = () => {
@@ -55,6 +112,14 @@ const searchFormationsByTitre = (titre) => {
     const searchPattern = `%${titre}%`;
     return db.query(query, [searchPattern]);
 };
+const searchFormationsByDomaine = async (domaine) => {
+    try {
+        const results = await query('SELECT * FROM formation_p WHERE domaine = ?', [domaine]);
+        return results;
+    } catch (error) {
+        throw error;
+    }
+};
 
 module.exports = {
     createFormation,
@@ -62,5 +127,6 @@ module.exports = {
     updateFormation,
     deleteFormation,
     searchFormationsByTitre,
-    getFormationById
+    getFormationById ,
+    searchFormationsByDomaine
 };

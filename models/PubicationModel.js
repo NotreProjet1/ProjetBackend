@@ -1,45 +1,65 @@
+// PublicationPModel.js
 const db = require('../config/db');
+const express = require('express');
 
-const createPublication = (titre, contenu, description,id_instructeur ) => {
-    const query = 'INSERT INTO publication (titre, contenu, description,id_instructeur ) VALUES (?,?, ?, ?)';
-    return db.query(query, [titre, contenu, description,id_instructeur]);
+const app = express();
+const util = require('util');
+
+const query = util.promisify(db.query).bind(db);
+
+const bodyParser = require('body-parser');
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+const createPublication = async (PublicationData) => {
+    try {
+        const { titre, description,  contenu } = PublicationData;
+        const query = 'INSERT INTO publication (titre, description, contenu) VALUES (?, ?,?)';
+        const result = await db.query(query, [titre	, description, contenu]);
+        return result;
+    } catch (error) {
+        throw new Error('Erreur lors de la création de la Publication dans la base de données');
+    }
 };
+const getPublicationById = async (id_public) => {
+    try {
+        const results = await query('SELECT * FROM publication WHERE id_public = ?', [id_public]);
+        return results.length > 0 ? results[0] : null;
+    } catch (error) {
+        throw error;
+    }
+};
+
+
+
 
 const getAllPublications = () => {
     const query = 'SELECT * FROM publication';
     return db.query(query);
 };
 
-const getPublicationById = (PublicationId) => {
-    const query = 'SELECT * FROM publication WHERE id = ?';
-    return db.query(query, [PublicationId]);
+const updatePublication = (id_public, titre, description, contenu) => {
+    const query = 'UPDATE publication SET titre = ?, description = ?, contenu = ? WHERE id_public = ?';
+    return db.query(query, [titre, description, contenu, id_public]);
 };
 
-const updatePublication = (PublicationId, titre, contenu, description) => {
-    const query = 'UPDATE publication SET titre = ?, contenu = ?, description = ? WHERE id = ?';
-    return db.query(query, [titre, contenu, description, PublicationId]);
+const deletePublication = (id_public) => {
+    const query = 'DELETE FROM publication WHERE id_public = ?';
+    return db.query(query, [id_public]);
 };
 
-const deletePublication = (PublicationId) => {
-    const query = 'DELETE FROM courpayant WHERE id = ?';
-    return db.query(query, [PublicationId]);
-};
-
-const searchPublications = (searchTerm) => {
-    const query = `
-        SELECT *
-        FROM publication
-        WHERE titre LIKE ? OR contenu LIKE ? OR description LIKE ?
-    `;
-    const searchPattern = `%${searchTerm}%`;
-    return db.query(query, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern]);
+const searchPublicationsByTitre = (titre) => {
+    const query = 'SELECT * FROM publication WHERE titre LIKE ?';
+    const searchPattern = `%${titre}%`;
+    return db.query(query, [searchPattern]);
 };
 
 module.exports = {
     createPublication,
     getAllPublications,
-    getPublicationById,
     updatePublication,
     deletePublication,
-    searchPublications,
+    searchPublicationsByTitre,
+    getPublicationById
 };

@@ -19,10 +19,10 @@ const createcours = async (coursData) => {
         throw new Error('Erreur lors de la création de la cours dans la base de données');
     }
 };
-const getcoursById = async (id_fp) => {
+const getcoursById = async (id_cp) => {
     try {
-      const query = 'SELECT * FROM courpayant WHERE id_fp = ?';
-      const [rows] = await db.query(query, [id_fp]);
+      const query = 'SELECT * FROM courpayant WHERE id_cp = ?';
+      const [rows] = await db.query(query, [id_cp]);
   
       if (rows.length === 0) {
         return null; // Aucune cours trouvée pour cet ID
@@ -40,14 +40,15 @@ const getAllcourss = () => {
     return db.query(query);
 };
 
-const updatecours = (id, titre, description, contenu) => {
-    const query = 'UPDATE courpayant SET titre = ?, description = ?, contenu = ? WHERE id_fp = ?';
-    return db.query(query, [titre, description, contenu, id]);
+const updatecours = (id_cp, titre, description, contenu) => {
+    const query = 'UPDATE courpayant SET titre = ?, description = ?, contenu = ? WHERE id_cp = ?';
+    return db.query(query, [titre, description, contenu, id_cp]);
 };
 
-const deletecours = (id) => {
-    const query = 'DELETE FROM courpayant WHERE id_fp = ?';
-    return db.query(query, [id]);
+
+const deletecours = (id_cp) => {
+    const query = 'DELETE FROM courpayant WHERE id_cp = ?';
+    return db.query(query, [id_cp]);
 };
 
 const searchcourssByTitre = (titre) => {

@@ -3,6 +3,7 @@ const db = require('../config/db');
 const util = require('util');
 const query = util.promisify(db.query).bind(db);
 const { authenticateToken } = require('../middleware/authMiddleware');
+const upload = require("../middleware/fileapp")
 
 const errorHandler = (res, message) => {
     console.error(message);
@@ -43,24 +44,21 @@ const createcours = async (req, res) => {
       res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
     }
   };
-  
-const updatecours = async (id_fp, titre, description) => {
-    const updateQuery = `
-        UPDATE courpayant
-        SET titre = ?, description = ?, contenu = ?
-        WHERE id_fp = ?
-    `;
+  const updatecours = async (req, res) => {
+    try {
+        const { id_cp } = req.params;
+        const { titre, description } = req.body;
+        const contenu = req.Fnameup; // Utiliser req.Fnameup pour récupérer le contenu
 
-    await db.query(updateQuery, [titre, description, id_fp]);
+        // Mettre à jour le cours dans la base de données
+        await CoursModel.updatecours(id_cp, titre, description, contenu);
 
-    // Sélectionnez la cours mise à jour après la mise à jour
-    const selectQuery = 'SELECT * FROM courpayant WHERE id_fp = ?';
-    const [updatedcours] = await db.query(selectQuery, [id_fp]);
-
-    return updatedcours;
+        res.status(200).json({ success: true, message: 'Cours modifié avec succès.' });
+    } catch (error) {
+        console.error('Error in updatecours:', error);
+        res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
+    }
 };
-
-
 
 const getAllcourss = async (req, res) => {
     try {
@@ -80,10 +78,13 @@ const getAllcourss = async (req, res) => {
 
 const deletecours = async (req, res) => {
     try {
-        const { id_fp } = req.params;
-        const result = await CoursModel.deletecours(id_fp);
+        const { id_cp } = req.params;
+        const result = await CoursModel.deletecours(id_cp);
 
-        res.status(200).json({ success: true, message: 'cours supprimée avec succès.', result });
+        // Extraire les informations nécessaires de l'objet result
+        const rowsAffected = result.affectedRows;
+
+        res.status(200).json({ success: true, message: 'cours supprimée avec succès.', rowsAffected });
     } catch (error) {
         console.error('Error in deletecours:', error);
         res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
@@ -93,18 +94,25 @@ const deletecours = async (req, res) => {
 const searchcourssByTitre = async (req, res) => {
     try {
         const { titre } = req.query;
-        const results = await CoursModel.searchcourssByTitre(titre);
+        // Utilisez LIKE pour rechercher les correspondances partielles dans la base de données
+        const results = await query('SELECT * FROM courpayant WHERE titre LIKE ?', [`%${titre}%`]);
 
-        res.status(200).json({ success: true, courss: results });
+        // Convertissez les résultats en une structure de données simple
+        const courss = results.map(result => ({ ...result }));
+
+        res.status(200).json({ success: true, courss });
     } catch (error) {
         console.error('Error in searchcourssByTitre:', error);
         res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
     }
 };
+
+
+
 const getcoursById = async (req, res) => {
     try {
-        const { id_fp } = req.params;
-        const cours = await CoursModel.getcoursById(id_fp);
+        const { id_cp } = req.params;
+        const cours = await CoursModel.getcoursById(id_cp);
 
         if (!cours) {
             return res.status(404).json({ success: false, message: 'cours non trouvée.' });

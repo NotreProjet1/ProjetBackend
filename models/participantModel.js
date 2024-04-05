@@ -59,7 +59,7 @@ const participant = {
 
   
 
-updateparticipant: async (id, participantData) => {
+updateparticipant: async (id_p, participantData) => {
       try {
           const { nom, prenom, emailP, domaine, categorie, mots_de_passeP,role, tel } = participantData;
 
@@ -73,15 +73,29 @@ updateparticipant: async (id, participantData) => {
           const updateQuery = `
               UPDATE participant
               SET nom = ?, prenom = ?, emailP= ?, domaine = ?, categorie = ?, mots_de_passeP = ?,role = ? ,tel = ?
-              WHERE id = ?
+              WHERE id_p = ?
           `;
 
-          const result = await query(updateQuery, [nom, prenom, emailP, domaine, categorie, hashedmots_de_passeP,role,tel , id]);
+          const result = await query(updateQuery, [nom, prenom, emailP, domaine, categorie, hashedmots_de_passeP,role,tel , id_p]);
           return result;
       } catch (error) {
           throw error;
       }
   },
+  updatePassword: async (id_p, nouveauMotDePasse) => {
+    try {
+        // Hasher le nouveau mot de passe
+        const hashedNouveauMotDePasse = await bcrypt.hash(nouveauMotDePasse, saltRounds);
+
+        // Mettre à jour le mot de passe dans la base de données
+        const updateQuery = 'UPDATE participant SET mots_de_passeP = ? WHERE id_p = ?';
+        const result = await query(updateQuery, [hashedNouveauMotDePasse, id_p]);
+        return result;
+    } catch (error) {
+        throw error;
+    }
+},
+
 
   deleteInstructeur: async (id) => {
       try {
