@@ -271,13 +271,54 @@ const getFormationById = async (req, res) => {
         res.status(500).json({ success: false, message: 'Erreur lors de la récupération du formation.' });
     }
 };
+const getFormationCount = async (req, res) => {
+    try {
+        const count = await FormationModel.countFormations();
+        res.json({ total: count });
+    } catch (error) {
+        console.error('Erreur lors de la récupération du nombre de formations :', error);
+        res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
+    }
+};
+const countDistinctDomains = async (req, res) => {
+    try {
+        const count = await FormationModel.countDistinctDomains();
+        res.json({ totalDistinctDomains: count });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur lors de la récupération du nombre de domaines.' });
+    }
+};
+
+// Contrôleur pour récupérer le nombre de formations par domaine
+const countFormationsByDomain = async (req, res) => {
+    try {
+        const formationsByDomain = await FormationModel.countFormationsByDomain();
+        res.json(formationsByDomain);
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur lors de la récupération du nombre de formations par domaine.' });
+    }
+};
+const getNumberOfCertificats = async (req, res) => {
+    try {
+        const count = await FormationModel.countCertificats();
+        res.status(200).json({ success: true, totalCertificats: count });
+    } catch (error) {
+        console.error('Erreur lors de la récupération du nombre de certificats :', error);
+        res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
+    }
+};
+
 
 module.exports = {
+    getNumberOfCertificats,
+    getFormationCount,
     createFormation,
     getAllFormations,
     updateFormation,
     deleteFormation,
     searchFormationsByTitre,
     getFormationById ,
-    searchFormationsByDomaine
+    searchFormationsByDomaine , 
+    countFormationsByDomain , 
+    countDistinctDomains
 };

@@ -61,26 +61,30 @@ const participant = {
 
 updateparticipant: async (id_p, participantData) => {
       try {
-          const { nom, prenom, emailP, domaine, categorie, mots_de_passeP,role, tel } = participantData;
-
+        const { id } = req.params;
+        const { avatar ,nom, prenom, emailP, domaine, categorie, mots_de_passeP, role , tel } = req.body;
           // Validation
-          if (!nom || !prenom || !emailP || !domaine || !categorie || !mots_de_passeP || !role || !tel) {
-              throw new Error('Tous les champs sont requis pour modifier un instructeur.');
-          }
+          if (!id || !validateFields(req, res)) {
+            return res.status(400).json({ message: 'ID et tous les champs sont requis pour modifier un Participant.' });
+        }
 
-          const hashedmots_de_passeP = await bcrypt.hash(mots_de_passeP, saltRounds);
+        const hashedmots_de_passeP = await bcrypt.hash(mots_de_passeP, saltRounds);
 
-          const updateQuery = `
-              UPDATE participant
-              SET nom = ?, prenom = ?, emailP= ?, domaine = ?, categorie = ?, mots_de_passeP = ?,role = ? ,tel = ?
-              WHERE id_p = ?
-          `;
+        const updateQuery = `
+            UPDATE Participant
+            SET avatar = ?, nom = ?, prenom = ?, emailP = ?, domaine = ?, categorie = ?, mots_de_passeP = ?, role = ? , tel = ? 
+            WHERE id_p = ?
+        `;
+        const result = await query(updateQuery, [avatar,nom, prenom, emailP, domaine, categorie, hashedmots_de_passeP, role,  tel ,id]);
 
-          const result = await query(updateQuery, [nom, prenom, emailP, domaine, categorie, hashedmots_de_passeP,role,tel , id_p]);
-          return result;
+        return res.status(200).json({
+            message: 'Instructeur modifié avec succès.',
+            instructeur: result
+        });
       } catch (error) {
-          throw error;
-      }
+        console.error('Error updating participant:', err);
+        return res.status(500).json({ message: 'Une erreur est survenue lors de la mise à jour du participant.' }); 
+    }
   },
   updatePassword: async (id_p, nouveauMotDePasse) => {
     try {
@@ -106,6 +110,56 @@ updateparticipant: async (id_p, participantData) => {
           throw error;
       }
   },
+  generateResetCode: async (emailP) => {
+    try {
+        // Générer un code de réinitialisation
+        const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Enregistrer le code de réinitialisation dans la base de données avec une date d'expiration
+        const expirationDate = new Date(Date.now() + 3600000); // 1 heure
+        const updateQuery = 'UPDATE participant SET reset_code = ?, reset_code_expires = ? WHERE emailP = ?';
+        await query(updateQuery, [resetCode, expirationDate, emailP]);
+
+        return resetCode;
+    } catch (error) {
+        throw error;
+    }
+},
+
+validateResetCode: async (emailP, resetCode) => {
+    try {
+        // Vérifier si le code de réinitialisation est valide
+        const results = await query('SELECT * FROM participant WHERE emailP = ?', [emailP]);
+
+        if (results.length > 0) {
+            const user = results[0];
+            if (user.reset_code === resetCode && user.reset_code_expires > new Date()) {
+                return true; // Code valide
+            }
+        }
+
+        return false; // Code invalide ou expiré
+    } catch (error) {
+        throw error;
+    }
+},
+
+resetPassword: async (emailP, nouveauMotDePasse) => {
+    try {
+        // Hasher le nouveau mot de passe
+        const hashedNouveauMotDePasse = await bcrypt.hash(nouveauMotDePasse, saltRounds);
+
+        // Mettre à jour le mot de passe dans la base de données et supprimer le code de réinitialisation
+        const updateQuery = 'UPDATE participant SET mots_de_passeP = ?, reset_code = NULL, reset_code_expires = NULL WHERE emailP = ?';
+        const result = await query(updateQuery, [hashedNouveauMotDePasse, emailP]);
+
+        return result;
+    } catch (error) {
+        throw error;
+    }
+},
+
 };
+
 
 module.exports = participant;

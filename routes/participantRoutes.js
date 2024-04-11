@@ -8,9 +8,11 @@ const participantController = require('../controllers/participantController');
 router.post('/register', participantController.register);
 router.post('/login', participantController.login);
 
-router.put('/modifier/:id_p', participantController.modifierParticipant);
+router.put('/modifier/:id', participantController.modifierParticipant);
 router.post('/lister', participantController.listerParticipant);
 router.post('/supprimer', participantController.supprimerParticipant);
 router.put('/modifierMotDePasse/:id_p', participantController.updatePassword);
+router.post('/resetPasswordRequest', participantController.resetPasswordRequest);
+router.put('/resetPassword', participantController.resetPassword);
 
 module.exports = router;

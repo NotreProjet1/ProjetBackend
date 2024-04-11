@@ -72,12 +72,10 @@ const listerParticipant = async (req, res) => {
 // };
 const modifierParticipant = async (req, res) => {
     try {
-        const { id_p } = req.params;
-        const { avatar ,nom, prenom, emailP, domaine, categorie, mots_de_passeP, role , tel } = req.body;
+        const { id } = req.params;
+        const { avatar, nom, prenom, emailP, domaine, categorie, mots_de_passeP, role, tel } = req.body;
 
-        // Supprimer la vérification du token et du rôle utilisateur
-
-        if (!id_p || !validateFields(req, res)) {
+        if (!id || !validateFields(req, res)) {
             return res.status(400).json({ message: 'ID et tous les champs sont requis pour modifier un Participant.' });
         }
 
@@ -85,20 +83,23 @@ const modifierParticipant = async (req, res) => {
 
         const updateQuery = `
             UPDATE Participant
-            SET avatar = ?, nom = ?, prenom = ?, emailP = ?, domaine = ?, categorie = ?, mots_de_passeP = ?, role = ? , tel = ? 
+            SET avatar = ?, nom = ?, prenom = ?, emailP = ?, domaine = ?, categorie = ?, mots_de_passeP = ?, role = ?, tel = ? 
             WHERE id_p = ?
         `;
 
-        const result = await query(updateQuery, [avatar,nom, prenom, emailP, domaine, categorie, hashedmots_de_passeP, role,  tel ,id_p]);
+        const result = await query(updateQuery, [avatar, nom, prenom, emailP, domaine, categorie, hashedmots_de_passeP, role, tel, id]);
 
         return res.status(200).json({
-            message: 'Instructeur modifié avec succès.',
-            instructeur: result
+            message: 'Participant modifié avec succès.',
+            participant: result // Utilisez le terme "participant" au lieu de "instructeur" si c'est le terme approprié
         });
     } catch (err) {
-        return errorHandler(res, err);
+        console.error('Error modifying participant:', err);
+        return res.status(500).json({ message: 'Une erreur est survenue lors de la modification du participant.' });
     }
 };
+
+
 const updatePassword = async (req, res) => {
     try {
         const { id_p } = req.params;
@@ -189,6 +190,47 @@ const supprimerParticipant = async (req, res) => {
         return errorHandler(res, err);
     }
 };
+const resetPasswordRequest = async (req, res) => {
+    const { emailP } = req.body;
+
+    try {
+        const user = await participant.getParticipantByEmail(emailP);
+
+        if (!user) {
+            return res.status(404).json({ message: 'Aucun utilisateur trouvé avec cet e-mail.' });
+        }
+
+        // Générer un code de réinitialisation et l'envoyer à l'utilisateur par e-mail
+        const resetCode = await participant.generateResetCode(emailP);
+
+        // Envoyer le code de réinitialisation par e-mail (utilisez Nodemailer ou un autre service)
+        // Ici, vous pouvez utiliser un service de messagerie pour envoyer le code de réinitialisation
+
+        return res.status(200).json({ message: 'Un code de réinitialisation a été envoyé à votre adresse e-mail.' });
+    } catch (error) {
+        return errorHandler(res, error.message);
+    }
+};
+
+const resetPassword = async (req, res) => {
+    const { emailP, resetCode, nouveauMotDePasse } = req.body;
+
+    try {
+        // Vérifier si le code de réinitialisation est valide
+        const isValidCode = await participant.validateResetCode(emailP, resetCode);
+        if (!isValidCode) {
+            return res.status(400).json({ message: 'Code de réinitialisation invalide ou expiré.' });
+        }
+
+        // Réinitialiser le mot de passe avec le nouveau mot de passe fourni
+        await participant.resetPassword(emailP, nouveauMotDePasse);
+
+        return res.status(200).json({ message: 'Le mot de passe a été réinitialisé avec succès.' });
+    } catch (error) {
+        return errorHandler(res, error.message);
+    }
+};
+
 
 module.exports = {
     listerParticipant,
@@ -196,5 +238,7 @@ module.exports = {
     supprimerParticipant,
     register,
     login ,
-    updatePassword
+    updatePassword,
+    resetPassword ,
+    resetPasswordRequest
 };

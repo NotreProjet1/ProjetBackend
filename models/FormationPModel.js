@@ -120,6 +120,44 @@ const searchFormationsByDomaine = async (domaine) => {
         throw error;
     }
 };
+const countFormations = async () => {
+    try {
+        const results = await query('SELECT COUNT(*) AS total FROM formation_p');
+        return results[0].total;
+    } catch (error) {
+        throw error;
+    }
+};
+const countDistinctDomains = async () => {
+    try {
+        const query = util.promisify(db.query).bind(db); // Utilisez util.promisify pour rendre db.query asynchrone
+        const queryString = 'SELECT COUNT(DISTINCT domaine) AS totalDomains FROM formation_p';
+        const results = await query(queryString);
+        return results[0].totalDomains;
+    } catch (error) {
+        throw error;
+    }
+};
+
+const countFormationsByDomain = async () => {
+    try {
+        const query = util.promisify(db.query).bind(db); // Utilisez util.promisify pour rendre db.query asynchrone
+        const queryString = 'SELECT domaine, COUNT(*) AS totalFormations FROM formation_p GROUP BY domaine';
+        const results = await query(queryString);
+        return results;
+    } catch (error) {
+        throw error;
+    }
+};
+const countCertificats = async () => {
+    try {
+        const results = await query('SELECT SUM(certeficat) AS totalCertificats FROM formation_p');
+        return results[0].totalCertificats;
+    } catch (error) {
+        throw error;
+    }
+};
+
 
 module.exports = {
     createFormation,
@@ -128,5 +166,9 @@ module.exports = {
     deleteFormation,
     searchFormationsByTitre,
     getFormationById ,
-    searchFormationsByDomaine
+    searchFormationsByDomaine ,
+    countFormations , 
+    countFormationsByDomain , 
+    countDistinctDomains ,
+    countCertificats
 };

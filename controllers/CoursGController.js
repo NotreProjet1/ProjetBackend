@@ -127,8 +127,18 @@ const getcoursById = async (req, res) => {
 };
 
 
+const getFreeCourseCount = async (req, res) => {
+    try {
+        const count = await CoursModel.countCours();
+        res.json({ total: count });
+    } catch (error) {
+        console.error('Erreur lors de la récupération du nombre de cours gratuis :', error);
+        res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
+    }
+};
 
 module.exports = {
+    getFreeCourseCount,
     createcours,
     getAllcourss,
     updatecours,

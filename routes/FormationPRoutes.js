@@ -12,5 +12,12 @@ router.delete('/supprimer/:id', formationController.deleteFormation);
 router.get('/rechercher', formationController.searchFormationsByTitre);
 router.get('/getFormationById/:id', formationController.getFormationById);
 router.get('/searchByDomaine', formationController.searchFormationsByDomaine);
+router.get('/count', formationController.getFormationCount);
+router.get('/countDistinctDomains', formationController.countDistinctDomains);  
+router.get('/getNumberOfCertificats', formationController.getNumberOfCertificats);  
+
+// Route pour récupérer le nombre de formations par domaine
+router.get('/countFormationsByDomain', formationController.countFormationsByDomain);
+
 
 module.exports = router;

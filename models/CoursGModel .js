@@ -3,6 +3,9 @@ const db = require('../config/db');
 const express = require('express');
 
 const app = express();
+const util = require('util');
+
+const query = util.promisify(db.query).bind(db);
 
 const bodyParser = require('body-parser');
 
@@ -59,11 +62,21 @@ const searchcourssByTitre = (titre) => {
     return db.query(query, [searchPattern]);
 };
 
+const countCours = async () => {
+    try {
+        const results = await query('SELECT COUNT(*) AS total FROM courgratuits');
+        return results[0].total;
+    } catch (error) {
+        throw error;
+    }
+};
+
 module.exports = {
     createcours,
     getAllcourss,
     updatecours,
     deletecours,
     searchcourssByTitre,
-    getcoursById
+    getcoursById , 
+    countCours
 };

@@ -11,5 +11,7 @@ router.put('/modifier/:id_cg',upload.any('contenu'), CoursGController.updatecour
 router.delete('/supprimer/:id_cg', CoursGController.deletecours);
 router.get('/rechercherByTitre', CoursGController.searchcourssByTitre);
 router.get('/getCoursById/:id_cg', CoursGController.getcoursById);
+router.get('/count', CoursGController.getFreeCourseCount);
+
 
 module.exports = router;
